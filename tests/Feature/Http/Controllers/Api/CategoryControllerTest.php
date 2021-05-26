@@ -69,6 +69,9 @@ class CategoryControllerTest extends TestCase
                 'is_active' => true,
                 'deleted_at' => null
             ]);
+        $response->assertJsonStructure([
+            'created_at', 'updated_at'
+        ]);
 
 
         $data = [
@@ -84,11 +87,6 @@ class CategoryControllerTest extends TestCase
 
     public function testUpdate()
     {
-        $this->category = factory(Category::class)->create([
-            'is_active' => false,
-            'description' => 'description'
-        ]);
-
         $data = [
             'name' => 'test',
             'description' => 'test',
@@ -120,22 +118,6 @@ class CategoryControllerTest extends TestCase
         $response->assertStatus(204);
         $this->assertNull(Category::find($this->category ->id));
         $this->assertNotNull(Category::withTrashed()->find($this->category ->id));
-    }
-
-    protected function assertInvalidationRequired(TestResponse $response)
-    {
-        $this->assertInvalidationFields($response, ['name'], 'required');
-        $response->assertJsonMissingValidationErrors(['is_active']);
-    }
-
-    protected function assertInvalidationMax(TestResponse $response)
-    {
-        $this->assertInvalidationFields($response, ['name'], 'max.string', ['max' => 255]);
-    }
-
-    protected function assertInvalidationBoolean(TestResponse $response)
-    {
-        $this->assertInvalidationFields($response, ['is_active'], 'boolean');
     }
 
     protected function routeStore()
