@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers\Api;
 
+use App\Models\Category;
 use App\Models\Genre;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,33 +44,47 @@ class GenreControllerTest extends TestCase
     public function testInvalidationData()
     {
         $data = [
-            'name' => 'test'
+            'name' => '',
+            'categories_id' => ''
         ];
-        $response =$this->assertStore($data, $data + [
-                'is_active' => true,
-                'deleted_at' => null
-            ]);
-        $response->assertJsonStructure([
-            'created_at', 'updated_at'
-        ]);
-
+        $this->assertInvalidationInStoreAction($data, 'required');
+        $this->assertInvalidationInUpdateAction($data, 'required');
 
         $data = [
-            'name' => 'test',
-            'is_active' => false,
+            'name' => str_repeat('a', 256),
         ];
-        $this->assertStore($data, $data + [
-                'is_active' => false,
-            ]);
+        $this->assertInvalidationInStoreAction($data, 'max.string', ['max' => 255]);
+        $this->assertInvalidationInUpdateAction($data, 'max.string', ['max' => 255]);
+
+        $data = [
+            'is_active' => 'a'
+        ];
+        $this->assertInvalidationInStoreAction($data, 'boolean');
+        $this->assertInvalidationInUpdateAction($data, 'boolean');
+
+        $data = [
+            'categories_id' => [100]
+        ];
+        $this->assertInvalidationInStoreAction($data, 'exists');
+        $this->assertInvalidationInUpdateAction($data, 'exists');
+
+        $category = factory(Category::class)->create();
+        $category->delete();
+        $data = [
+            'categories_id' => ['categories_id' => $category->id]
+        ];
+        $this->assertInvalidationInStoreAction($data, 'exists');
+        $this->assertInvalidationInUpdateAction($data, 'exists');
 
     }
 
     public function testStore()
     {
+        $categoryId = factory(Category::class)->create()->id;
         $data = [
             'name' => 'test'
         ];
-        $response =$this->assertStore($data, $data + [
+        $response =$this->assertStore($data + ['categories_id' => [$categoryId]], $data + [
                 'is_active' => true,
                 'deleted_at' => null
             ]);
@@ -82,18 +97,19 @@ class GenreControllerTest extends TestCase
             'name' => 'test',
             'is_active' => false,
         ];
-        $this->assertStore($data, $data + [
+        $this->assertStore($data + ['categories_id' => [$categoryId]], $data + [
                 'is_active' => false,
             ]);
     }
 
     public function testUpdate()
     {
+        $categoryId = factory(Category::class)->create()->id;
         $data = [
             'name' => 'test',
             'is_active' => true
         ];
-        $response = $this->assertUpdate($data, $data + ['deleted_at' => null]);
+        $response = $this->assertUpdate($data + ['categories_id' => [$categoryId]], $data + ['deleted_at' => null]);
         $response->assertJsonStructure([
             'created_at', 'updated_at'
         ]);
@@ -101,7 +117,8 @@ class GenreControllerTest extends TestCase
         $data = [
             'name' => 'test',
         ];
-        $this->assertUpdate($data, $data);
+        $this->assertUpdate($data + ['categories_id' => [$categoryId]], $data);
+        $this->assertHasCategory($response->json('id'), $categoryId);
     }
 
     public function testDestroy()
@@ -113,6 +130,15 @@ class GenreControllerTest extends TestCase
         $this->assertNull(Genre::find($genre->id));
         $this->assertNotNull(Genre::withTrashed()->find($genre->id));
     }
+
+    protected function assertHasCategory($genreId, $categoryId)
+    {
+        $this->assertDatabaseHas('category_genre', [
+            'genre_id' => $genreId,
+            'category_id' => $categoryId
+        ]);
+    }
+
     protected function routeStore()
     {
         return route('genres.store');

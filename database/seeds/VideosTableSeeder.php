@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Seeder;
 
-class CastMembersTableSeeder extends Seeder
+class VideosTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -11,6 +11,6 @@ class CastMembersTableSeeder extends Seeder
      */
     public function run()
     {
-        factory(\App\Models\CastMember::class, 100)->create();
+        factory(\App\Models\Video::class, 100)->create();
     }
 }

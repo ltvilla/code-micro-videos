@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 class Genre extends Model
 {
-    use SoftDeletes, \App\Models\Traits\Uuid;
+    use SoftDeletes, Uuid;
 
     protected $table = 'genres';
     protected $fillable = [
@@ -23,4 +24,9 @@ class Genre extends Model
     ];
     public $incrementing = false;
     protected $keyType = 'string';
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class)->withTrashed();
+    }
 }
