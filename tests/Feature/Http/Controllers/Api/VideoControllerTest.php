@@ -133,18 +133,81 @@ class VideoControllerTest extends TestCase
         $this->assertInvalidationInUpdateAction($data, 'exists');
     }
 
-    public function testStore()
+    public function testSave()
     {
         $category = factory(Category::class)->create();
         $genre = factory(Genre::class)->create();
-        $response = $this->assertUpdate($this->sendData + [
-                'categories_id' => [$category->id],
-                'genres_id' => [$genre->id],
-            ], $this->sendData + ['opened' => false]);
-        $response->assertJsonStructure([
-            'created_at', 'updated_at'
-        ]);
-        $this->assertStore($this->sendData + ['opened' => true], $this->sendData + ['opened' => true]);
+        $genre->categories()->sync($category->id);
+
+        $data = [
+            [
+                'send_data' => $this->sendData + [
+                        'categories_id' => [$category->id],
+                        'genres_id' => [$genre->id],
+                    ],
+                'test_data' => $this->sendData + ['opened' => false]
+            ],
+            [
+                'send_data' => $this->sendData + [
+                        'opened' => true,
+                        'categories_id' => [$category->id],
+                        'genres_id' => [$genre->id],
+                    ],
+                'test_data' => $this->sendData + ['opened' => true]
+            ],
+            [
+                'send_data' => $this->sendData + [
+                        'rating' => Video::RATING_LIST[1],
+                        'categories_id' => [$category->id],
+                        'genres_id' => [$genre->id],
+                    ],
+                'test_data' => $this->sendData + ['rating' => Video::RATING_LIST[1]]
+            ],
+            [
+                'send_data' => $this->sendData + [
+                        'rating' => Video::RATING_LIST[1],
+                        'categories_id' => [$category->id],
+                        'genres_id' => [$genre->id],
+                    ],
+                'test_data' => $this->sendData + ['rating' => Video::RATING_LIST[1]]
+            ]
+        ];
+
+        foreach ($data as $key => $value) {
+            $response = $this->assertStore(
+                $value['send_data'],
+                $value['test_data'] + ['deleted_at' => null]
+            );
+            $response->assertJsonStructure([
+                'created_at',
+                'updated_at'
+            ]);
+            $this->assertHasCategory(
+                $response->json('id'),
+                $value['send_data']['categories_id'][0]
+            );
+            $this->assertHasGenre(
+                $response->json('id'),
+                $value['send_data']['genres_id'][0]
+            );
+
+            $response = $this->assertUpdate(
+                $value['send_data'],
+                $value['test_data'] + ['deleted_at' => null]
+            );
+            $response->assertJsonStructure([
+                'created_at',
+                'updated_at'
+            ]);
+            $this->assertHasCategory(
+                $response->json('id'),
+                $value['send_data']['categories_id'][0]
+            );
+            $this->assertHasGenre(
+                $response->json('id'),
+                $value['send_data']['genres_id'][0]
+            );
+        }
     }
 
     public function testRollBackStore()
@@ -165,20 +228,14 @@ class VideoControllerTest extends TestCase
             ->once()
             ->andThrow(new TestException());
 
+        $hasError = false;
         try {
             $controller->store($request);
         } catch (TestException $exception) {
             $this->assertCount(1, Video::all());
+            $hasError = true;
         }
-    }
-
-    public function testUpdate()
-    {
-        $response = $this->assertUpdate($this->sendData, $this->sendData + ['opened' => false]);
-        $response->assertJsonStructure([
-            'created_at', 'updated_at'
-        ]);
-        $this->assertUpdate($this->sendData + ['opened' => true], $this->sendData + ['opened' => true]);
+        $this->assertTrue($hasError);
     }
 
     public function testShow()
@@ -200,6 +257,22 @@ class VideoControllerTest extends TestCase
         $response->assertStatus(204);
         $this->assertNull(Video::find($video->id));
         $this->assertNotNull(Video::withTrashed()->find($video->id));
+    }
+
+    protected function assertHasCategory($videoId, $categoryId)
+    {
+        $this->assertDatabaseHas('category_video', [
+            'video_id' => $videoId,
+            'category_id' => $categoryId
+        ]);
+    }
+
+    protected function assertHasGenre($videoId, $genreId)
+    {
+        $this->assertDatabaseHas('genre_video', [
+            'video_id' => $videoId,
+            'genre_id' => $genreId
+        ]);
     }
 
     protected function model()

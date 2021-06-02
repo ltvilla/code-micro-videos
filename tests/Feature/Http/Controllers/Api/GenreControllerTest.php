@@ -2,12 +2,15 @@
 
 namespace Tests\Feature\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\GenreController;
 use App\Models\Category;
 use App\Models\Genre;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\Request;
+use Tests\Exceptions\TestException;
 use Tests\TestCase;
 use Tests\Traits\TestSaves;
 use Tests\Traits\TestValidations;
@@ -102,6 +105,35 @@ class GenreControllerTest extends TestCase
             ]);
     }
 
+    public function testRollBackStore()
+    {
+        $controller = \Mockery::mock(GenreController::class)
+            ->makePartial()
+            ->shouldAllowMockingProtectedMethods();
+        $controller
+            ->shouldReceive('validate')
+            ->withAnyArgs()
+            ->andReturn(['name' => 'test']);
+        $controller
+            ->shouldReceive('rulesStore')
+            ->withAnyArgs()
+            ->andReturn([]);
+
+        $request = \Mockery::mock(Request::class);
+        $controller->shouldReceive('handleRelations')
+            ->once()
+            ->andThrow(new TestException());
+
+        $hasError = false;
+        try {
+            $controller->store($request);
+        } catch (TestException $exception) {
+            $this->assertCount(1, Genre::all());
+            $hasError = true;
+        }
+        $this->assertTrue($hasError);
+    }
+
     public function testUpdate()
     {
         $categoryId = factory(Category::class)->create()->id;
@@ -119,6 +151,40 @@ class GenreControllerTest extends TestCase
         ];
         $this->assertUpdate($data + ['categories_id' => [$categoryId]], $data);
         $this->assertHasCategory($response->json('id'), $categoryId);
+    }
+
+    public function testRollBackUpdate()
+    {
+        $controller = \Mockery::mock(GenreController::class)
+            ->makePartial()
+            ->shouldAllowMockingProtectedMethods();
+        $controller
+            ->shouldReceive('findOrFail')
+            ->withAnyArgs()
+            ->andReturn($this->genre);
+        $controller
+            ->shouldReceive('validate')
+            ->withAnyArgs()
+            ->andReturn(['name' => 'test']);
+
+        $controller
+            ->shouldReceive('rulesUpdate')
+            ->withAnyArgs()
+            ->andReturn([]);
+
+        $request = \Mockery::mock(Request::class);
+        $controller->shouldReceive('handleRelations')
+            ->once()
+            ->andThrow(new TestException());
+
+        $hasError = false;
+        try {
+            $controller->store($request, 1);
+        } catch (TestException $exception) {
+            $this->assertCount(1, Genre::all());
+            $hasError = true;
+        }
+        $this->assertTrue($hasError);
     }
 
     public function testDestroy()
