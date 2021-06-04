@@ -211,34 +211,6 @@ class VideoControllerTest extends TestCase
         }
     }
 
-    public function testRollBackStore()
-    {
-        $controller = \Mockery::mock(VideoController::class)
-            ->makePartial()
-            ->shouldAllowMockingProtectedMethods();
-        $controller
-            ->shouldReceive('validate')
-            ->withAnyArgs()
-            ->andReturn($this->sendData);
-        $controller
-            ->shouldReceive('rulesStore')
-            ->withAnyArgs()
-            ->andReturn([]);
-        $request = \Mockery::mock(Request::class);
-        $controller->shouldReceive('handleRelations')
-            ->once()
-            ->andThrow(new TestException());
-
-        $hasError = false;
-        try {
-            $controller->store($request);
-        } catch (TestException $exception) {
-            $this->assertCount(1, Video::all());
-            $hasError = true;
-        }
-        $this->assertTrue($hasError);
-    }
-
     public function testShow()
     {
         $response = $this->get(route('videos.show', ['video' => $this->video->id]));

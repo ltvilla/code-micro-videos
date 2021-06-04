@@ -6,6 +6,13 @@ services:
         build: .
         container_name: micro-videos-app
         entrypoint: dockerize -wait tcp://db:3306 -timeout 40s ./.docker/entrypoint.sh
+        environment:
+            - XDEBUG_CONFIG=client_host=172.17.0.1 client_port=9003 start_with_request=yes log=/var/log/xdebug.log
+            - XDEBUG_MODE=debug
+            - XDEBUG_SESSION=phpstorm
+            - "PHP_IDE_CONFIG=serverName=server-laravel"
+        expose:
+          - 9003
         volumes:
             - .:/var/www
         networks:
