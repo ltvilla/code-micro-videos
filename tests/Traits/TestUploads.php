@@ -17,7 +17,7 @@ trait TestUploads
                 'route' => $this->routeStore()
             ],
             [
-                'method' => 'POST',
+                'method' => 'PUT',
                 'route' => $this->routeUpdate()
             ],
         ];
@@ -35,6 +35,13 @@ trait TestUploads
             ]);
             $this->assertInvalidationFields($response, [$field], 'max.file', ['max' => $maxSize]);
 
+        }
+    }
+
+    protected function assertFilesExistsInStorage($model, array $files)
+    {
+        foreach ($files as $file) {
+            \Storage::assertExists($model->relativeFilePath($file->hashName()));
         }
     }
 }

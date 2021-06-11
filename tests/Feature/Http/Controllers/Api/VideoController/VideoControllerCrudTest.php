@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Tests\Exceptions\TestException;
 use Tests\Feature\Http\Controllers\Api\VideoController\BaseVideoControllerTestCase;
 use Tests\TestCase;
@@ -123,41 +124,27 @@ class VideoControllerCrudTest extends BaseVideoControllerTestCase
 
     public function testSaveWithoutFiles()
     {
-        $category = factory(Category::class)->create();
-        $genre = factory(Genre::class)->create();
-        $genre->categories()->sync($category->id);
-
+        $testData = Arr::except($this->sendData, ['categories_id', 'genres_id']);
         $data = [
             [
-                'send_data' => $this->sendData + [
-                        'categories_id' => [$category->id],
-                        'genres_id' => [$genre->id],
-                    ],
-                'test_data' => $this->sendData + ['opened' => false]
+                'send_data' => $this->sendData,
+                'test_data' => $testData + ['opened' => false]
             ],
             [
-                'send_data' => $this->sendData + [
-                        'opened' => true,
-                        'categories_id' => [$category->id],
-                        'genres_id' => [$genre->id],
-                    ],
-                'test_data' => $this->sendData + ['opened' => true]
+                'send_data' => $this->sendData,
+                'test_data' => $testData + ['opened' => true]
             ],
             [
                 'send_data' => $this->sendData + [
                         'rating' => Video::RATING_LIST[1],
-                        'categories_id' => [$category->id],
-                        'genres_id' => [$genre->id],
                     ],
-                'test_data' => $this->sendData + ['rating' => Video::RATING_LIST[1]]
+                'test_data' => $testData + ['rating' => Video::RATING_LIST[1]]
             ],
             [
                 'send_data' => $this->sendData + [
                         'rating' => Video::RATING_LIST[1],
-                        'categories_id' => [$category->id],
-                        'genres_id' => [$genre->id],
                     ],
-                'test_data' => $this->sendData + ['rating' => Video::RATING_LIST[1]]
+                'test_data' => $testData + ['rating' => Video::RATING_LIST[1]]
             ]
         ];
 
