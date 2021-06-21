@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Tests\Stubs\Model\CategoryStub;
+use Tests\Stubs\Resources\CategoryStubResource;
 
 class CategoryControllerStub extends BasicCrudController
 {
@@ -30,5 +31,15 @@ class CategoryControllerStub extends BasicCrudController
             'name' => 'required|max:255',
             'description' => 'nullable'
         ];
+    }
+
+    protected function resource()
+    {
+        return CategoryStubResource::class;
+    }
+
+    protected function resourceCollection()
+    {
+        return $this->resource();
     }
 }
