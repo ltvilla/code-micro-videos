@@ -10,7 +10,7 @@ RUN apk add --no-cache shadow openssl \
     freetype-dev \
     libjpeg-turbo-dev \
     libpng-dev
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql bcmath sockets
 RUN docker-php-ext-configure gd --with-gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include --with-png-dir=/usr/include/
 RUN docker-php-ext-install -j$(nproc) gd
 
