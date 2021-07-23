@@ -17,6 +17,7 @@ services:
             - .:/var/www
         networks:
             - app-network
+            - rabbitmq_codeflix
         depends_on:
             - db
             - redis
@@ -32,6 +33,7 @@ services:
             - .:/var/www
         networks:
             - app-network
+            - rabbitmq_codeflix
         depends_on:
             - app
 
@@ -61,3 +63,5 @@ services:
 networks:
     app-network:
         driver: bridge
+    rabbitmq_codeflix:
+      external: true
