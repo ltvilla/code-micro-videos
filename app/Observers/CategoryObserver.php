@@ -15,7 +15,6 @@ class CategoryObserver
     public function created(Category $category)
     {
         //
-        
     }
 
     /**
