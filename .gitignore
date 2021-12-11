@@ -1,3 +1,4 @@
 ./.docker/dbdata
+.docker
 .idea/
 .vscode/
