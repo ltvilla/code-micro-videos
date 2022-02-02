@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #On error no such file entrypoint.sh, execute in terminal - dos2unix .docker\entrypoint.sh
+#cd /var/www/frontend && npm install && cd ..
 cd backend
 cp .env.example .env
 cp .env.testing.example .env.testing
