@@ -10,12 +10,10 @@ RUN apk add --no-cache shadow openssl \
     freetype-dev \
     libjpeg-turbo-dev \
     libpng-dev \
-RUN touch /root/.bashrc | echo "PS1='\w\$'" >> /root/.bashrc
+RUN touch /home/www-data/.bashrc | echo "PS1='\w\$ '" >> /home/www-data/.bashrc
 RUN docker-php-ext-install pdo pdo_mysql bcmath sockets
 RUN docker-php-ext-configure gd --with-gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
 RUN docker-php-ext-install -j$(nproc) gd
-
-RUN touch /home/www-data/.bashrc | echo "PS1='\w\$ '" >> /home/www-data/.bashrc
 
 RUN pecl install -f xdebug \
 && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini;
